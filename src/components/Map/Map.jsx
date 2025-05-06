@@ -39,19 +39,26 @@ const agenciaIcon = L.icon({
 
 function Map() {
   const [sedes, setSedes] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
 
   useEffect(() => {
-    const fetchSedes = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/sedes`);
-        const data = await response.json();
-        setSedes(data); // Asigna directamente el array al estado
+        // Obtener sedes
+        const sedesResponse = await fetch(`${API_BASE_URL}/sedes`);
+        const sedesData = await sedesResponse.json();
+        setSedes(sedesData);
+
+        // Obtener usuarios
+        const usuariosResponse = await fetch('https://backend-soporte-campo-vpc.onrender.com/usuarios');
+        const usuariosData = await usuariosResponse.json();
+        setUsuarios(usuariosData);
       } catch (error) {
-        console.error('Error al obtener las sedes:', error);
+        console.error('Error al obtener datos:', error);
       }
     };
 
-    fetchSedes();
+    fetchData();
   }, []);
 
   return (
@@ -68,8 +75,9 @@ function Map() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a>'
           />
           <ZoomControl position="bottomright" />
+          {/* Renderizar marcadores de sedes */}
           {sedes
-            .filter((sede) => sede.latitud && sede.longitud) // Filtra sedes con coordenadas válidas
+            .filter((sede) => sede.latitud && sede.longitud)
             .map((sede) => (
               <Marker
                 key={sede.sede_id}
@@ -87,6 +95,23 @@ function Map() {
                     <h3>{sede.tipo}</h3>
                     <p>Nombre: {sede.nombre}</p>
                     <p>Dirección: {sede.direccion}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+
+          {/* Renderizar marcadores de usuarios */}
+          {usuarios
+            .filter((usuario) => usuario.latitud && usuario.longitud)
+            .map((usuario) => (
+              <Marker
+                key={usuario.usuario_id}
+                position={[parseFloat(usuario.latitud), parseFloat(usuario.longitud)]}
+                icon={new L.Icon.Default()}
+              >
+                <Popup>
+                  <div>
+                    <p>{usuario.nombreCompleto}</p>
                   </div>
                 </Popup>
               </Marker>
