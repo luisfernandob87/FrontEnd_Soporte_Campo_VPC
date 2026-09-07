@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../config';
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
   const [error, setError] = useState('');
   const [token, setToken] = useState(localStorage.getItem('token'));
 
@@ -30,19 +30,21 @@ export function AuthProvider({ children }) {
         setError(data.message || 'Error al iniciar sesión');
         return false;
       }
-    } catch (err) {
+    } catch {
       setError('Error de conexión');
       return false;
     }
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
     setIsAuthenticated(false);
     setError('');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, error, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, token, error, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

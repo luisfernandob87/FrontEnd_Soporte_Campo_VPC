@@ -21,12 +21,14 @@ function App() {
     }
   };
 
+  const esMapa = location.pathname === '/map';
+
   if (!isAuthenticated) {
     return <Login />;
   }
 
   return (
-    <div className="app-container">
+    <div className={`app-container${esMapa ? ' map-page' : ''}`}>
       <header className="app-header">
         <h1>{getFormName(location.pathname)}</h1>
         <button onClick={logout} className="logout-button">

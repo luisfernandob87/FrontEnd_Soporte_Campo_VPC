@@ -1,5 +1,8 @@
 .map-container {
-  padding: 1rem;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  width: 100%;
 }
 
 .map-container h2 {
@@ -7,8 +10,78 @@
   margin-bottom: 1.5rem;
 }
 
+.map-layout {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.map-panel {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 300px;
+  max-width: calc(100% - 2rem);
+  max-height: calc(100% - 2rem);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  z-index: 1000;
+}
+
+.panel-block {
+  margin-bottom: 1.5rem;
+}
+
+.panel-block:last-child {
+  margin-bottom: 0;
+}
+
+.panel-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.4rem;
+}
+
 .map-content {
-  height: 100vh; /* Ajusta según sea necesario */
+  position: absolute;
+  inset: 0;
+}
+
+.last-location {
+  margin-top: 1rem;
+  background: #f7f9fc;
+  border: 1px solid #e3e8ef;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.location-details {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.location-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.location-details dt {
+  font-weight: bold;
+  color: #555;
+}
+
+.location-details dd {
+  margin: 0;
+  color: #333;
+  font-family: monospace;
 }
 
 .leaflet-map {
@@ -51,4 +124,58 @@
 
 .layer-button:hover {
   border-color: #0077ff;
+}
+
+.route-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.route-select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.95rem;
+  min-width: 200px;
+}
+
+.range-buttons {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.range-button {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.range-button.active {
+  background: #e8f4ff;
+  border-color: #0077ff;
+  color: #0077ff;
+  font-weight: bold;
+}
+
+.range-button:hover {
+  border-color: #0077ff;
+}
+
+.route-message {
+  margin: 0 0 0.75rem;
+  color: #666;
+  font-style: italic;
+}
+
+.leaflet-container {
+  z-index: 10;
 }
