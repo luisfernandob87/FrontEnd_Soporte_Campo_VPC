@@ -1,19 +1,116 @@
-.store-container {
+.usuarios-container {
   padding: 1rem;
 }
 
-.store-container h2 {
-  color: #333;
-  margin-bottom: 1.5rem;
-}
-
-.store-content {
+.usuarios-content {
   background: white;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.usuarios-header {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.usuarios-buscador {
+  flex: 1;
+  min-width: 220px;
+  height: 40px;
+  padding: 0 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.usuarios-buscador:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+.usuarios-list {
+  margin-top: 2rem;
+  overflow-x: auto;
+}
+
+.usuarios-list h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.usuarios-vacio {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+.usuarios-rol {
+  display: inline-block;
+  background: #eef2ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.usuarios-status {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.usuarios-status.activo {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.usuarios-status.inactivo {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.usuarios-acciones {
+  white-space: nowrap;
+}
+
+.usuarios-message {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  background-color: #dcfce7;
+  color: #15803d;
+  text-align: center;
+  border: 1px solid #bbf7d0;
+}
+
+.usuarios-paginacion {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.usuarios-paginacion span {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Estilos compartidos de formulario y modal */
 .form-group {
   margin-bottom: 1rem;
 }
@@ -34,31 +131,9 @@
   font-size: 1rem;
 }
 
-/* Cabecera: buscador + botón agregar */
-.store-header {
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-
-.store-buscador {
-  flex: 1;
-  min-width: 220px;
-  height: 40px;
-  padding: 0 0.85rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.store-buscador:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+.form-group input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
 .btn-agregar {
@@ -93,23 +168,6 @@
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.4);
 }
 
-.store-vacio {
-  text-align: center;
-  color: #999;
-  font-style: italic;
-}
-
-/* Tabla de sedes */
-.stores-list {
-  margin-top: 2rem;
-  overflow-x: auto;
-}
-
-.stores-list h3 {
-  margin-bottom: 1rem;
-  color: #333;
-}
-
 table {
   width: 100%;
   border-collapse: collapse;
@@ -132,13 +190,6 @@ tr:hover {
   background-color: #f5f6f8;
 }
 
-.acciones-cell {
-  display: flex;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-/* Botones compactos de fila (Editar / Eliminar) */
 .loading-button.btn-mini {
   height: 32px;
   min-width: 78px;
@@ -162,15 +213,6 @@ tr:hover {
   background-color: #15803d;
 }
 
-.loading-button.btn-mini--eliminar {
-  background-color: #dc2626;
-}
-
-.loading-button.btn-mini--eliminar:hover:not(:disabled) {
-  background-color: #b91c1c;
-}
-
-/* Botón secundario (Cancelar) */
 .loading-button.btn-secundario {
   background-color: #6b7280;
 }
@@ -179,7 +221,6 @@ tr:hover {
   background-color: #4b5563;
 }
 
-/* Botones de tamaño estándar (modal añadir/actualizar, cancelar) */
 .loading-button.btn-header {
   height: 40px;
   padding: 0 22px;
@@ -192,20 +233,6 @@ tr:hover {
 
 .loading-button.btn-header:active:not(:disabled) {
   transform: scale(0.98);
-}
-
-/* Paginación */
-.store-paginacion {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
-  flex-wrap: wrap;
-}
-
-.store-paginacion span {
-  font-size: 0.9rem;
-  color: #555;
 }
 
 .btn-paginacion {
@@ -235,18 +262,6 @@ tr:hover {
   cursor: not-allowed;
 }
 
-/* Mensajes */
-.message {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  border-radius: 4px;
-  background-color: #dcfce7;
-  color: #15803d;
-  text-align: center;
-  border: 1px solid #bbf7d0;
-}
-
-/* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;

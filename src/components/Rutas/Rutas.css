@@ -1,0 +1,297 @@
+.rutas-container {
+  padding: 1rem;
+}
+
+.rutas-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rutas-header {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.rutas-buscador {
+  flex: 1;
+  min-width: 220px;
+  height: 40px;
+  padding: 0 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rutas-buscador:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+.rutas-list {
+  margin-top: 2rem;
+  overflow-x: auto;
+}
+
+.rutas-list h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.rutas-vacio {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 0.75rem 0;
+}
+
+.rutas-message {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  background-color: #dcfce7;
+  color: #15803d;
+  text-align: center;
+  border: 1px solid #bbf7d0;
+}
+
+/* Insignia de estado */
+.rutas-estado {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.rutas-estado--planificada {
+  background: #eef2ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+}
+
+.rutas-estado--en-curso {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.rutas-estado--completada {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.rutas-estado--cancelada {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.rutas-acciones {
+  white-space: nowrap;
+}
+
+.rutas-paginacion {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.rutas-paginacion span {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.loading-button.btn-mini--ver {
+  background-color: #f57c00;
+}
+
+.loading-button.btn-mini--ver:hover:not(:disabled) {
+  background-color: #e06a00;
+}
+
+/* Modal ancho con los dos paneles */
+.modal.rutas-modal {
+  max-width: 920px;
+}
+
+.rutas-paneles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 720px) {
+  .rutas-paneles {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rutas-panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.9rem;
+  background: #f9fafb;
+}
+
+.rutas-panel h4 {
+  margin: 0 0 0.6rem;
+  color: #333;
+}
+
+.rutas-buscador-sede {
+  width: 100%;
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 0.6rem;
+}
+
+.rutas-buscador-sede:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+.rutas-sedes-lista,
+.rutas-orden-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 40vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rutas-sedes-lista li,
+.rutas-orden-lista li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+}
+
+.rutas-sede-info,
+.rutas-orden-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rutas-sede-info strong,
+.rutas-orden-info strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rutas-sede-info em,
+.rutas-orden-info em {
+  display: block;
+  font-size: 0.8rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rutas-agregar-btn {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background-color: #16a34a;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.rutas-agregar-btn:hover:not(:disabled) {
+  background-color: #15803d;
+}
+
+.rutas-agregar-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.rutas-agregar-btn:disabled {
+  background-color: #d1fae5;
+  color: #16a34a;
+  cursor: default;
+}
+
+.rutas-orden-num {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background-color: #eef2ff;
+  color: #4338ca;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rutas-orden-acciones {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 0.3rem;
+}
+
+.rutas-orden-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: white;
+  color: #374151;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.rutas-orden-btn:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.rutas-orden-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rutas-orden-btn--quitar {
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.rutas-orden-btn--quitar:hover:not(:disabled) {
+  background-color: #fee2e2;
+  border-color: #f87171;
+}

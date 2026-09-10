@@ -1,7 +1,8 @@
 import './Map.css';
 import { MapContainer, TileLayer, ZoomControl, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import L from 'leaflet';
 import { API_BASE_URL } from '../../config';
 import s24 from '../../assets/s24_icono.png';
@@ -37,27 +38,53 @@ const agenciaIcon = L.icon({
   shadowUrl: markerShadow,
 });
 
-// Opciones de rango de fechas para la ruta
-const RANGOS = [
-  { id: 'hoy', label: 'Hoy', dias: 0, desdeInicioDeHoy: true },
-  { id: '3d', label: '3 días', dias: 3, desdeInicioDeHoy: false },
-  { id: '7d', label: '7 días', dias: 7, desdeInicioDeHoy: false },
-  { id: '30d', label: '30 días', dias: 30, desdeInicioDeHoy: false },
-];
-
 const UMBRAL_SEGMENTO_MS = 15 * 60 * 1000; // 15 minutos
 const ACCURACY_MAX = 100; // metros
+const DIAS_ATRAS_MAX = 30;
+const DIA_MS = 24 * 60 * 60 * 1000;
 
-// Calcula la fecha límite según el rango seleccionado
-const obtenerLimiteRango = (rango) => {
-  const config = RANGOS.find((r) => r.id === rango) || RANGOS[0];
-  const limite = new Date();
-  if (config.desdeInicioDeHoy) {
-    limite.setHours(0, 0, 0, 0);
-  } else {
-    limite.setDate(limite.getDate() - config.dias);
+// Marcador circular numerado para el orden planificado de visitas
+const crearIconoPlan = (n) =>
+  L.divIcon({
+    className: 'mapa-ruta-plan-icon',
+    html: `<div class="mapa-ruta-plan-bg">${n}</div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+
+const fmtFecha = (ts) => {
+  const d = new Date(ts);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+};
+
+// Genera las opciones de día (de hoy hasta 30 días atrás)
+const construirDias = () => {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const dias = [];
+  for (let i = 0; i <= DIAS_ATRAS_MAX; i++) {
+    const dia = new Date(hoy);
+    dia.setDate(hoy.getDate() - i);
+    dias.push(dia);
   }
-  return limite.getTime();
+  return dias;
+};
+
+// Etiqueta legible para cada día del desplegable
+const etiquetaDia = (dia) => {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const diff = Math.round((hoy.getTime() - dia.getTime()) / DIA_MS);
+  if (diff === 0) return 'Hoy';
+  if (diff === 1) return 'Ayer';
+  return dia.toLocaleDateString('es-GT', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 };
 
 // Divide los puntos de la ruta en segmentos cuando hay saltos de tiempo grandes
@@ -101,13 +128,22 @@ function Map() {
   const [sedes, setSedes] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState('');
-  const [rango, setRango] = useState('hoy');
+  const [diaSeleccionado, setDiaSeleccionado] = useState(() => {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return hoy.getTime();
+  });
   const [segmentos, setSegmentos] = useState([]);
   const [cargandoRuta, setCargandoRuta] = useState(false);
   const [mensajeRuta, setMensajeRuta] = useState('');
   const [mostrarAgencias, setMostrarAgencias] = useState(true);
   const [mostrarS24, setMostrarS24] = useState(true);
   const [ultimaUbicacion, setUltimaUbicacion] = useState(null);
+  const [rutasDisponibles, setRutasDisponibles] = useState([]);
+  const [rutaSeleccionadaId, setRutaSeleccionadaId] = useState('');
+  const [rutaPlanificada, setRutaPlanificada] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rutaParamProcesada = useRef(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,9 +157,11 @@ function Map() {
         const usuariosResponse = await fetch(`${API_BASE_URL}/usuarios`);
         const usuariosData = await usuariosResponse.json();
         setUsuarios(usuariosData);
-        if (usuariosData.length > 0) {
-          setUsuarioSeleccionado(String(usuariosData[0].usuario_id));
-        }
+
+        // Obtener rutas planificadas
+        const rutasResponse = await fetch(`${API_BASE_URL}/rutas`);
+        const rutasData = await rutasResponse.json();
+        setRutasDisponibles(Array.isArray(rutasData) ? rutasData : []);
       } catch (error) {
         console.error('Error al obtener datos:', error);
       }
@@ -131,6 +169,57 @@ function Map() {
 
     fetchData();
   }, []);
+
+  // Cargar la ruta planificada seleccionada en el panel o desde el enlace "Ver en mapa"
+  useEffect(() => {
+    let ignorar = false;
+    if (!rutaSeleccionadaId) {
+      setRutaPlanificada(null);
+      return;
+    }
+    const cargar = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/ruta/${rutaSeleccionadaId}`);
+        const data = response.ok ? await response.json() : null;
+        if (ignorar) return;
+        setRutaPlanificada(data && Array.isArray(data.sedes) ? data : null);
+      } catch (error) {
+        console.error('Error al cargar la ruta planificada:', error);
+        if (!ignorar) setRutaPlanificada(null);
+      }
+    };
+    cargar();
+    return () => {
+      ignorar = true;
+    };
+  }, [rutaSeleccionadaId]);
+
+  // Si se llega con /map?ruta=ID, cargar esa ruta y ubicar técnico/día
+  useEffect(() => {
+    const rutaId = searchParams.get('ruta');
+    if (rutaId && !rutaParamProcesada.current) {
+      rutaParamProcesada.current = true;
+      (async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/ruta/${rutaId}`);
+          const data = response.ok ? await response.json() : null;
+          if (data && Array.isArray(data.sedes)) {
+            setRutaPlanificada(data);
+            setRutaSeleccionadaId(String(data.ruta_id));
+            setUsuarioSeleccionado(String(data.usuario_id));
+            const d = new Date(`${data.fecha}T00:00:00`);
+            if (!isNaN(d.getTime())) setDiaSeleccionado(d.getTime());
+          }
+        } catch (error) {
+          console.error('Error al cargar ruta desde la URL:', error);
+        } finally {
+          setSearchParams({}, { replace: true });
+        }
+      })();
+    } else if (rutaParamProcesada.current && !rutaId) {
+      rutaParamProcesada.current = false;
+    }
+  }, [searchParams, setSearchParams]);
 
   // Obtener el historial de ubicación del usuario seleccionado
   useEffect(() => {
@@ -152,7 +241,6 @@ function Map() {
           throw new Error('Error al obtener el historial');
         }
         const data = await response.json();
-        const limite = obtenerLimiteRango(rango);
 
         const puntos = (Array.isArray(data) ? data : [])
           .filter(
@@ -168,14 +256,16 @@ function Map() {
           .sort((a, b) => a.ts - b.ts);
 
         const ultimoPunto = puntos[puntos.length - 1] || null;
-        const puntosRuta = puntos.filter((p) => p.ts >= limite);
+        const inicioDia = diaSeleccionado;
+        const finDia = inicioDia + DIA_MS;
+        const puntosRuta = puntos.filter((p) => p.ts >= inicioDia && p.ts < finDia);
 
         if (ignorar) return;
         setUltimaUbicacion(ultimoPunto);
         const segs = construirSegmentos(puntosRuta);
         setSegmentos(segs);
         if (puntosRuta.length === 0) {
-          setMensajeRuta('Sin registros de ubicación en el rango seleccionado.');
+          setMensajeRuta('Sin registros de ubicación en el día seleccionado.');
         }
       } catch (error) {
         console.error('Error al obtener el historial:', error);
@@ -193,23 +283,40 @@ function Map() {
     return () => {
       ignorar = true;
     };
-  }, [usuarioSeleccionado, rango]);
+  }, [usuarioSeleccionado, diaSeleccionado]);
 
   const todosLosPuntos = segmentos.flat();
+  const dias = construirDias();
   const usuarioActual = usuarios.find(
     (u) => String(u.usuario_id) === String(usuarioSeleccionado)
   );
 
-  const ubicacionDesdeUsuario =
-    usuarioActual?.latitud && usuarioActual?.longitud
-      ? {
-          latitud: parseFloat(usuarioActual.latitud),
-          longitud: parseFloat(usuarioActual.longitud),
-          ts: null,
-        }
-      : null;
+  // Solo los usuarios con rol Técnico pueden evaluarse en el mapa
+  const tecnicos = usuarios.filter(
+    (u) => String(u.rol || '').trim() === 'Técnico'
+  );
 
-  const ultimaUbicacionMostrar = ultimaUbicacion || ubicacionDesdeUsuario;
+  // Rutas planificadas del técnico y día seleccionados
+  const rutasDelDia = rutasDisponibles.filter(
+    (r) =>
+      String(r.usuario_id) === String(usuarioSeleccionado) &&
+      String(r.fecha).slice(0, 10) === fmtFecha(diaSeleccionado)
+  );
+
+  // Puntos de la ruta planificada (en orden de visita) como objetos para el mapa
+  const puntosPlan = (rutaPlanificada?.sedes || [])
+    .filter(
+      (s) =>
+        s.latitud &&
+        s.longitud &&
+        !isNaN(parseFloat(s.latitud)) &&
+        !isNaN(parseFloat(s.longitud))
+    )
+    .map((s) => ({ latitud: parseFloat(s.latitud), longitud: parseFloat(s.longitud) }));
+
+  const puntosVista = todosLosPuntos.length > 0 ? todosLosPuntos : puntosPlan;
+
+  const ultimaUbicacionMostrar = ultimaUbicacion;
 
   const formatearFecha = (ts) =>
     ts
@@ -255,10 +362,14 @@ function Map() {
               <select
                 className="route-select"
                 value={usuarioSeleccionado}
-                onChange={(e) => setUsuarioSeleccionado(e.target.value)}
+                onChange={(e) => {
+                  setUsuarioSeleccionado(e.target.value);
+                  setRutaSeleccionadaId('');
+                  setRutaPlanificada(null);
+                }}
               >
-                {usuarios.length === 0 && <option value="">Sin técnicos</option>}
-                {usuarios.map((usuario) => (
+                <option value="">Seleccionar técnico</option>
+                {tecnicos.map((usuario) => (
                   <option key={usuario.usuario_id} value={usuario.usuario_id}>
                     {usuario.nombreCompleto || `Usuario ${usuario.usuario_id}`}
                   </option>
@@ -266,17 +377,56 @@ function Map() {
               </select>
             </label>
 
-            <div className="range-buttons">
-              {RANGOS.map((r) => (
-                <button
-                  key={r.id}
-                  className={`range-button ${rango === r.id ? 'active' : ''}`}
-                  onClick={() => setRango(r.id)}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
+            <label className="route-label">
+              Día:
+              <select
+                className="route-select"
+                value={diaSeleccionado}
+                onChange={(e) => {
+                  setDiaSeleccionado(Number(e.target.value));
+                  setRutaSeleccionadaId('');
+                  setRutaPlanificada(null);
+                }}
+              >
+                {dias.map((dia) => (
+                  <option key={dia.getTime()} value={dia.getTime()}>
+                    {etiquetaDia(dia)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="route-label">
+              Ruta planificada:
+              <select
+                className="route-select"
+                value={rutaSeleccionadaId}
+                onChange={(e) => setRutaSeleccionadaId(e.target.value)}
+                disabled={!usuarioSeleccionado}
+              >
+                <option value="">{rutasDelDia.length ? 'Seleccionar ruta' : 'Sin ruta este día'}</option>
+                {rutasDelDia.map((r) => (
+                  <option key={r.ruta_id} value={r.ruta_id}>
+                    {r.fecha} — {r.total_sedes} sedes — {r.estado}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {rutaPlanificada && Array.isArray(rutaPlanificada.sedes) && rutaPlanificada.sedes.length > 0 && (
+              <div className="planned-route">
+                <h4 className="panel-title">Orden planificado de visitas</h4>
+                <p className="route-message">Línea naranja punteada: ruta planificada.</p>
+                <ol className="planned-route-list">
+                  {rutaPlanificada.sedes.map((s, i) => (
+                    <li key={s.sede_id}>
+                      <span className="planned-route-num">{i + 1}</span>
+                      {s.nombre || `Sede #${s.sede_id}`}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
 
             <div className="last-location">
               <h4 className="panel-title">Última ubicación</h4>
@@ -324,7 +474,7 @@ function Map() {
             />
             <ZoomControl position="bottomright" />
 
-            <AjustarVistaMapa puntos={todosLosPuntos} />
+            <AjustarVistaMapa puntos={puntosVista} />
 
             {/* Renderizar marcadores de sedes */}
             {sedes
@@ -356,27 +506,6 @@ function Map() {
                 </Marker>
               ))}
 
-            {/* Renderizar marcadores de usuarios */}
-            {usuarios
-              .filter((usuario) => usuario.latitud && usuario.longitud)
-              .map((usuario) => (
-                <Marker
-                  key={usuario.usuario_id}
-                  position={[parseFloat(usuario.latitud), parseFloat(usuario.longitud)]}
-                  icon={new L.Icon.Default()}
-                >
-                  <Popup>
-                    <div>
-                      <p>{usuario.nombreCompleto}</p>
-                      <p>
-                        Lat: {parseFloat(usuario.latitud).toFixed(5)} — Lng:{' '}
-                        {parseFloat(usuario.longitud).toFixed(5)}
-                      </p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-
             {/* Renderizar la ruta del usuario seleccionado */}
             {segmentos.map((segmento, i) => (
               <Polyline
@@ -397,6 +526,7 @@ function Map() {
                   <Popup>
                     <div>
                       <p>Inicio de ruta — {usuarioActual?.nombreCompleto}</p>
+                      <p>Hora: {formatearHora(todosLosPuntos[0].ts)}</p>
                     </div>
                   </Popup>
                 </Marker>
@@ -410,11 +540,40 @@ function Map() {
                   <Popup>
                     <div>
                       <p>Última ubicación — {usuarioActual?.nombreCompleto}</p>
+                      <p>Hora: {formatearHora(todosLosPuntos[todosLosPuntos.length - 1].ts)}</p>
                     </div>
                   </Popup>
                 </Marker>
               </>
             )}
+          {/* Trazar la ruta planificada (orden de visita) */}
+            {puntosPlan.length > 1 && (
+              <Polyline
+                positions={puntosPlan.map((p) => [p.latitud, p.longitud])}
+                pathOptions={{ color: '#f57c00', weight: 4, opacity: 0.85, dashArray: '8 8' }}
+              />
+            )}
+            {rutaPlanificada &&
+              Array.isArray(rutaPlanificada.sedes) &&
+              rutaPlanificada.sedes.map((s, i) =>
+                s.latitud && s.longitud ? (
+                  <Marker
+                    key={`plan-${s.sede_id}`}
+                    position={[parseFloat(s.latitud), parseFloat(s.longitud)]}
+                    icon={crearIconoPlan(i + 1)}
+                  >
+                    <Popup>
+                      <div>
+                        <strong>
+                          {i + 1}. {s.tipo}
+                        </strong>
+                        <p>Nombre: {s.nombre}</p>
+                        {s.direccion && <p>Dirección: {s.direccion}</p>}
+                      </div>
+                    </Popup>
+                  </Marker>
+                ) : null
+              )}
           </MapContainer>
         </div>
       </div>

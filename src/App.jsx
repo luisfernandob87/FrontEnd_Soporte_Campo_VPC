@@ -1,14 +1,28 @@
+import { useRef, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Login } from './components/Login/Login';
-import Navigation from './components/Navigation/Navigation';
+import Menu from './components/Menu/Menu';
 import Sede from './components/Store/Store';
 import Map from './components/Map/Map';
+import Reportes from './components/Reportes/Reportes';
+import Usuarios from './components/Usuarios/Usuarios';
+import Rutas from './components/Rutas/Rutas';
 import './App.css';
 
 function App() {
   const { isAuthenticated, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const prevAuthenticated = useRef(isAuthenticated);
+
+  // Al iniciar sesión, navegar siempre al menú principal sin importar dónde se cerró la sesión
+  useEffect(() => {
+    if (isAuthenticated && !prevAuthenticated.current) {
+      navigate('/', { replace: true });
+    }
+    prevAuthenticated.current = isAuthenticated;
+  }, [isAuthenticated, navigate]);
 
   const getFormName = (path) => {
     switch (path) {
@@ -16,8 +30,14 @@ function App() {
         return 'Agregar Sede';
       case '/map':
         return 'Ver Mapa';
+      case '/reportes':
+        return 'Reportes';
+      case '/usuarios':
+        return 'Usuarios';
+      case '/rutas':
+        return 'Rutas';
       default:
-        return 'Panel de Administración';
+        return 'Menú Principal';
     }
   };
 
@@ -36,11 +56,13 @@ function App() {
         </button>
       </header>
       <main className="app-content">
-        <Navigation />
         <Routes>
-          <Route path="/" element={<Navigate to="/sede" replace />} />
+          <Route path="/" element={<Menu />} />
           <Route path="/sede" element={<Sede />} />
           <Route path="/map" element={<Map />} />
+          <Route path="/reportes" element={<Reportes />} />
+          <Route path="/usuarios" element={<Usuarios />} />
+          <Route path="/rutas" element={<Rutas />} />
         </Routes>
       </main>
     </div>

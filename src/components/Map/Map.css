@@ -132,6 +132,7 @@
   gap: 0.5rem;
   font-weight: bold;
   color: #333;
+  margin-bottom: 0.6rem;
 }
 
 .route-select {
@@ -143,33 +144,6 @@
   min-width: 200px;
 }
 
-.range-buttons {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.range-button {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-}
-
-.range-button.active {
-  background: #e8f4ff;
-  border-color: #0077ff;
-  color: #0077ff;
-  font-weight: bold;
-}
-
-.range-button:hover {
-  border-color: #0077ff;
-}
-
 .route-message {
   margin: 0 0 0.75rem;
   color: #666;
@@ -178,4 +152,67 @@
 
 .leaflet-container {
   z-index: 10;
+}
+
+/* Marcador numerado de la ruta planificada */
+.mapa-ruta-plan-icon {
+  background: transparent;
+  border: none;
+}
+
+.mapa-ruta-plan-bg {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #f57c00;
+  color: #fff;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Resumen del orden planificado en el panel */
+.planned-route {
+  margin-top: 1rem;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.planned-route-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 30vh;
+  overflow-y: auto;
+}
+
+.planned-route-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.planned-route-num {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #f57c00;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
