@@ -459,9 +459,9 @@ function Rutas() {
                         <li key={s.sede_id}>
                           <div className="rutas-sede-info">
                             <strong>{s.nombre}</strong>
-                            <em>
+                            {/* <em>
                               {s.tipo} — {s.direccion}
-                            </em>
+                            </em> */}
                           </div>
                           <button
                             type="button"
@@ -490,7 +490,7 @@ function Rutas() {
                         <span className="rutas-orden-num">{i + 1}</span>
                         <div className="rutas-orden-info">
                           <strong>{s.nombre || `Sede #${s.sede_id}`}</strong>
-                          {s.direccion && <em>{s.tipo} — {s.direccion}</em>}
+                          {/* {s.direccion && <em>{s.tipo} — {s.direccion}</em>} */}
                         </div>
                         <div className="rutas-orden-acciones">
                           <button
