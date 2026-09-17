@@ -8,6 +8,7 @@ import Map from './components/Map/Map';
 import Reportes from './components/Reportes/Reportes';
 import Usuarios from './components/Usuarios/Usuarios';
 import Rutas from './components/Rutas/Rutas';
+import Tickets from './components/Tickets/Tickets';
 import './App.css';
 
 function App() {
@@ -36,6 +37,8 @@ function App() {
         return 'Usuarios';
       case '/rutas':
         return 'Rutas';
+      case '/tickets':
+        return 'Tickets';
       default:
         return 'Menú Principal';
     }
@@ -63,6 +66,7 @@ function App() {
           <Route path="/reportes" element={<Reportes />} />
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/rutas" element={<Rutas />} />
+          <Route path="/tickets" element={<Tickets />} />
         </Routes>
       </main>
     </div>
