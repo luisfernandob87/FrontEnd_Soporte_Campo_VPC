@@ -546,14 +546,7 @@ function Map() {
                 </Marker>
               </>
             )}
-          {/* Trazar la ruta planificada (orden de visita) */}
-            {puntosPlan.length > 1 && (
-              <Polyline
-                positions={puntosPlan.map((p) => [p.latitud, p.longitud])}
-                pathOptions={{ color: '#f57c00', weight: 4, opacity: 0.85, dashArray: '8 8' }}
-              />
-            )}
-            {rutaPlanificada &&
+          {rutaPlanificada &&
               Array.isArray(rutaPlanificada.sedes) &&
               rutaPlanificada.sedes.map((s, i) =>
                 s.latitud && s.longitud ? (

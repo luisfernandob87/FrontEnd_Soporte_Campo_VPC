@@ -221,7 +221,7 @@ function Reportes() {
     );
   }, [sedes, busquedaSede]);
 
-  const FILAS_POR_PAGINA = 50;
+  const FILAS_POR_PAGINA = 5;
   const totalPaginasSedes = Math.max(
     1,
     Math.ceil(sedesFiltradas.length / FILAS_POR_PAGINA)
@@ -379,7 +379,7 @@ function Reportes() {
     Usuario: b.usuario || '-',
   }));
 
-  const FILAS_BITACORA_POR_PAGINA = 20;
+  const FILAS_BITACORA_POR_PAGINA = 5;
   const totalPaginasBitacora = Math.max(
     1,
     Math.ceil(bitacoraFilas.length / FILAS_BITACORA_POR_PAGINA)
