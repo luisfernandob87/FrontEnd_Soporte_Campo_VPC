@@ -44,30 +44,30 @@ const descargarCSV = (nombre, filas) => {
 const fmtFecha = (ts) =>
   ts
     ? new Date(ts).toLocaleDateString('es-GT', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      })
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
     : 'Sin registro';
 
 const fmtHora = (ts) =>
   ts
     ? new Date(ts).toLocaleTimeString('es-GT', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      })
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
     : 'Sin registro';
 
 const fmtFechaHora = (ts) =>
   ts
     ? new Date(ts).toLocaleDateString('es-GT', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     : 'Sin registros';
 
 const isoFecha = (fecha) => {
@@ -132,7 +132,9 @@ function Reportes() {
         fetch(`${API_BASE_URL}/usuarios`).then((r) => r.json()),
       ]);
       const sedesArr = Array.isArray(sedesRes) ? sedesRes : [];
-      const usuariosArr = Array.isArray(usuariosRes) ? usuariosRes : [];
+      const usuariosArr = Array.isArray(usuariosRes)
+        ? usuariosRes.filter((u) => u.rol === 'Técnico')
+        : [];
       setSedes(sedesArr);
       setUsuarios(usuariosArr);
 
@@ -476,7 +478,7 @@ function Reportes() {
                     <tr>
                       <th>Tipo</th>
                       <th>Nombre</th>
-                      <th>Dirección</th>
+                      {/* <th>Dirección</th> */}
                       <th>Latitud</th>
                       <th>Longitud</th>
                     </tr>
@@ -493,7 +495,7 @@ function Reportes() {
                       <tr key={s.sede_id}>
                         <td>{s.tipo}</td>
                         <td>{s.nombre}</td>
-                        <td>{s.direccion}</td>
+                        {/* <td>{s.direccion}</td> */}
                         <td>{s.latitud}</td>
                         <td>{s.longitud}</td>
                       </tr>

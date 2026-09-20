@@ -104,15 +104,25 @@ function Rutas() {
   const tecnicosActivos = useMemo(
     () =>
       usuarios
-        .filter((u) => String(u.status || 'Activo') === 'Activo')
-        .sort((a, b) => {
-          const aTec = String(a.rol || '') === 'Técnico' ? 0 : 1;
-          const bTec = String(b.rol || '') === 'Técnico' ? 0 : 1;
-          if (aTec !== bTec) return aTec - bTec;
-          return String(a.nombreCompleto).localeCompare(String(b.nombreCompleto));
-        }),
+        .filter(
+          (u) =>
+            String(u.rol || '') === 'Técnico' &&
+            String(u.status || 'Activo') === 'Activo'
+        )
+        .sort((a, b) => String(a.nombreCompleto).localeCompare(String(b.nombreCompleto))),
     [usuarios]
   );
+
+  const usuariosOpciones = useMemo(() => {
+    const tecnicos = tecnicosActivos;
+    const actual = usuarios.find(
+      (u) => String(u.usuario_id) === String(formData.usuario_id)
+    );
+    if (actual && !tecnicos.some((t) => String(t.usuario_id) === String(actual.usuario_id))) {
+      return [...tecnicos, actual];
+    }
+    return tecnicos;
+  }, [tecnicosActivos, usuarios, formData.usuario_id]);
 
   const sedesDisponibles = useMemo(
     () => sedes.filter((s) => String(s.status || 'Activo') === 'Activo'),
@@ -403,7 +413,7 @@ function Rutas() {
                   required
                 >
                   <option value="">- Seleccione un técnico -</option>
-                  {tecnicosActivos.map((u) => (
+                  {usuariosOpciones.map((u) => (
                     <option key={u.usuario_id} value={u.usuario_id}>
                       {u.nombreCompleto} ({u.usuario})
                     </option>

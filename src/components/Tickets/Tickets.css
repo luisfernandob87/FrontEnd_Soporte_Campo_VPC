@@ -126,6 +126,11 @@
   font-weight: 500;
 }
 
+.tickets-prioridad {
+  display: inline-block;
+  font-weight: 600;
+}
+
 .tickets-estado--assigned {
   background: #eef2ff;
   color: #4338ca;

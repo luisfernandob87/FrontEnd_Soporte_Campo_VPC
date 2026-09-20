@@ -296,6 +296,12 @@ tr:hover {
   border: 1px solid #bbf7d0;
 }
 
+.message--error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
 /* Modal */
 .modal-overlay {
   position: fixed;

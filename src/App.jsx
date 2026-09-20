@@ -9,6 +9,7 @@ import Reportes from './components/Reportes/Reportes';
 import Usuarios from './components/Usuarios/Usuarios';
 import Rutas from './components/Rutas/Rutas';
 import Tickets from './components/Tickets/Tickets';
+import Notificaciones from './components/Notificaciones/Notificaciones';
 import './App.css';
 
 function App() {
@@ -39,6 +40,8 @@ function App() {
         return 'Rutas';
       case '/tickets':
         return 'Tickets';
+      case '/notificaciones':
+        return 'Notificaciones';
       default:
         return 'Menú Principal';
     }
@@ -53,6 +56,13 @@ function App() {
   return (
     <div className={`app-container${esMapa ? ' map-page' : ''}`}>
       <header className="app-header">
+        <div className="app-header-left">
+          {location.pathname !== '/' && (
+            <button onClick={() => navigate('/')} className="back-button">
+              <span className="back-arrow">←</span> Menú Principal
+            </button>
+          )}
+        </div>
         <h1>{getFormName(location.pathname)}</h1>
         <button onClick={logout} className="logout-button">
           Cerrar Sesión
@@ -67,6 +77,7 @@ function App() {
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/rutas" element={<Rutas />} />
           <Route path="/tickets" element={<Tickets />} />
+          <Route path="/notificaciones" element={<Notificaciones />} />
         </Routes>
       </main>
     </div>

@@ -14,6 +14,7 @@ const FORM_VACIO = {
 function Store() {
   const [formData, setFormData] = useState(FORM_VACIO);
   const [message, setMessage] = useState('');
+  const [messageEsError, setMessageEsError] = useState(false);
   const [stores, setStores] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -76,6 +77,7 @@ function Store() {
     setIsEditing(false);
     setEditingId(null);
     setMessage('');
+    setMessageEsError(false);
     setModalAbierto(true);
   };
 
@@ -90,6 +92,7 @@ function Store() {
     setIsEditing(true);
     setEditingId(store.sede_id);
     setMessage('');
+    setMessageEsError(false);
     setModalAbierto(true);
   };
 
@@ -120,16 +123,19 @@ function Store() {
 
       if (response.ok) {
         setMessage(isEditing ? 'Sede actualizada exitosamente' : 'Sede agregada exitosamente');
+        setMessageEsError(false);
         setFormData(FORM_VACIO);
         cerrarModal();
         fetchStores();
       } else {
         const errorData = await response.json();
         console.error('Error en la respuesta:', errorData);
-        setMessage(isEditing ? 'Error al actualizar la sede' : 'Error al agregar la sede');
+        setMessage(errorData.message || (isEditing ? 'Error al actualizar la sede' : 'Error al agregar la sede'));
+        setMessageEsError(true);
       }
     } catch (error) {
       setMessage('Error de conexión');
+      setMessageEsError(true);
       console.error('Error:', error);
     } finally {
       setIsSubmitting(false);
@@ -146,12 +152,15 @@ function Store() {
 
         if (response.ok) {
           setMessage('Sede eliminada exitosamente');
+          setMessageEsError(false);
           fetchStores();
         } else {
           setMessage('Error al eliminar la sede');
+          setMessageEsError(true);
         }
       } catch (error) {
         setMessage('Error de conexión');
+        setMessageEsError(true);
         console.error('Error:', error);
       } finally {
         setIsDeletingId(null);
@@ -259,8 +268,19 @@ function Store() {
       }
 
       let creadas = 0;
+      let duplicadas = 0;
       const errores = [];
       const datos = filas.slice(1);
+
+      const nombresVistos = new Set(
+        stores.map((s) => String(s.nombre || '').trim().toLowerCase())
+      );
+      const coordsVistas = new Set(
+        stores.map((s) => `${String(s.latitud || '').trim()}|${String(s.longitud || '').trim()}`)
+      );
+      const esDuplicada = (data) =>
+        nombresVistos.has(data.nombre.toLowerCase()) ||
+        coordsVistas.has(`${data.latitud}|${data.longitud}`);
 
       for (let i = 0; i < datos.length; i++) {
         const fila = datos[i];
@@ -277,6 +297,11 @@ function Store() {
           continue;
         }
 
+        if (esDuplicada(data)) {
+          duplicadas++;
+          continue;
+        }
+
         try {
           const response = await fetch(`${API_BASE_URL}/sede`, {
             method: 'POST',
@@ -285,6 +310,10 @@ function Store() {
           });
           if (response.ok) {
             creadas++;
+            nombresVistos.add(data.nombre.toLowerCase());
+            coordsVistas.add(`${data.latitud}|${data.longitud}`);
+          } else if (response.status === 409) {
+            duplicadas++;
           } else {
             errores.push(`Fila ${i + 2}: "${data.nombre}" (error del servidor)`);
           }
@@ -293,7 +322,7 @@ function Store() {
         }
       }
 
-      const resumen = `Importación completada: ${creadas} sedes creadas, ${errores.length} con errores.`;
+      const resumen = `Importación completada: ${creadas} creadas, ${duplicadas} duplicadas, ${errores.length} con errores.`;
       setImportMessage({
         type: errores.length > 0 ? 'error' : 'success',
         texto: errores.length > 0
@@ -317,7 +346,9 @@ function Store() {
   return (
     <div className="store-container">
       <div className="store-content">
-        {!modalAbierto && message && <p className="message">{message}</p>}
+        {!modalAbierto && message && (
+          <p className={messageEsError ? 'message message--error' : 'message'}>{message}</p>
+        )}
         {importMessage && (
           <p className={`import-message ${importMessage.type === 'error' ? 'import-message--error' : ''}`}>
             {importMessage.texto}
@@ -445,7 +476,9 @@ function Store() {
                 ×
               </button>
             </div>
-            {message && <p className="message">{message}</p>}
+            {message && (
+              <p className={messageEsError ? 'message message--error' : 'message'}>{message}</p>
+            )}
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label htmlFor="tipo">Tipo:</label>

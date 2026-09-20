@@ -2,6 +2,31 @@ import { useState, useEffect } from 'react';
 import './Tickets.css';
 import { API_BASE_URL } from '../../config';
 
+const prioridadFormateada = (priority) => {
+  const p = (priority || '').toLowerCase();
+  if (
+    p.includes('high') ||
+    p.includes('critical') ||
+    p.includes('urgent') ||
+    p.includes('alta') ||
+    p.includes('critica')
+  ) {
+    return { label: 'Alta', color: '#d32f2f' };
+  }
+  if (
+    p.includes('medium') ||
+    p.includes('med') ||
+    p.includes('media') ||
+    p.includes('moderate')
+  ) {
+    return { label: 'Media', color: '#ef6c00' };
+  }
+  if (p.includes('low') || p.includes('baja')) {
+    return { label: 'Baja', color: '#388e3c' };
+  }
+  return { label: priority || 'Sin prioridad', color: '#666666' };
+};
+
 function Tickets() {
   const [tecnicos, setTecnicos] = useState([]);
   const [seleccionado, setSeleccionado] = useState(null);
@@ -49,15 +74,23 @@ function Tickets() {
     setDetalle(null);
   };
 
-  const renderFila = (item, tipo) => (
-    <tr key={`${item.type}-${item.id}`}>
-      <td>{item.dwpSrid}</td>
-      <td>{tipo === 'ticket' ? item.incidentNumber : item.workOrderId}</td>
-      <td>{item.urgency}</td>
-      <td>{item.priority}</td>
-      <td><span className={`tickets-estado tickets-estado--${String(item.status).toLowerCase().replace(/\s+/g, '-')}`}>{item.status}</span></td>
-    </tr>
-  );
+  const renderFila = (item, tipo, index) => {
+    const prioridad = prioridadFormateada(item.priority);
+    return (
+      <tr key={`${item.type}-${item.id}-${index}`}>
+        <td>{item.dwpSrid}</td>
+        <td>{tipo === 'ticket' ? item.incidentNumber : item.workOrderId}</td>
+        <td>{item.cliente}</td>
+        <td>{item.grupo}</td>
+        <td>
+          <span className="tickets-prioridad" style={{ color: prioridad.color }}>
+            {prioridad.label}
+          </span>
+        </td>
+        <td><span className={`tickets-estado tickets-estado--${String(item.status).toLowerCase().replace(/\s+/g, '-')}`}>{item.status}</span></td>
+      </tr>
+    );
+  };
 
   return (
     <div className="tickets-container">
@@ -138,7 +171,8 @@ function Tickets() {
                       <tr>
                         <th>ID de petición</th>
                         <th>N° incidente</th>
-                        <th>Urgencia</th>
+                        <th>Cliente</th>
+                        <th>Grupo</th>
                         <th>Prioridad</th>
                         <th>Estado</th>
                       </tr>
@@ -146,12 +180,12 @@ function Tickets() {
                     <tbody>
                       {detalle.tickets.length === 0 && (
                         <tr>
-                          <td colSpan="5" className="tickets-vacio">
+                          <td colSpan="6" className="tickets-vacio">
                             Sin incidentes asignados.
                           </td>
                         </tr>
                       )}
-                      {detalle.tickets.map((item) => renderFila(item, 'ticket'))}
+                      {detalle.tickets.map((item, i) => renderFila(item, 'ticket', i))}
                     </tbody>
                   </table>
                 </section>
@@ -163,7 +197,8 @@ function Tickets() {
                       <tr>
                         <th>ID de petición</th>
                         <th>N° orden</th>
-                        <th>Urgencia</th>
+                        <th>Cliente</th>
+                        <th>Grupo</th>
                         <th>Prioridad</th>
                         <th>Estado</th>
                       </tr>
@@ -171,12 +206,12 @@ function Tickets() {
                     <tbody>
                       {detalle.workOrders.length === 0 && (
                         <tr>
-                          <td colSpan="5" className="tickets-vacio">
+                          <td colSpan="6" className="tickets-vacio">
                             Sin órdenes de trabajo asignadas.
                           </td>
                         </tr>
                       )}
-                      {detalle.workOrders.map((item) => renderFila(item, 'workOrder'))}
+                      {detalle.workOrders.map((item, i) => renderFila(item, 'workOrder', i))}
                     </tbody>
                   </table>
                 </section>
