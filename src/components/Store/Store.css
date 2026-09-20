@@ -93,6 +93,56 @@
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.4);
 }
 
+.store-header-acciones {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-csv {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-csv:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.btn-csv:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.import-message {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  font-size: 0.9rem;
+}
+
+.import-message--error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
 .store-vacio {
   text-align: center;
   color: #999;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import './Store.css';
 import { API_BASE_URL } from '../../config';
 import LoadingButton from '../common/LoadingButton';
@@ -22,6 +22,9 @@ function Store() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
+  const [importando, setImportando] = useState(false);
+  const [importMessage, setImportMessage] = useState(null);
+  const fileInputRef = useRef(null);
 
   const FILAS_POR_PAGINA = 10;
 
@@ -156,10 +159,170 @@ function Store() {
     }
   };
 
+  const escaparCSV = (valor) => {
+    const s = String(valor ?? '');
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const exportarCSV = () => {
+    const encabezados = ['tipo', 'nombre', 'direccion', 'latitud', 'longitud'];
+    const filas = stores.map((sede) =>
+      encabezados.map((h) => escaparCSV(sede[h])).join(',')
+    );
+    const csv = [encabezados.join(','), ...filas].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'sedes.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const parseCSV = (texto) => {
+    const filas = [];
+    let fila = [];
+    let campo = '';
+    let enComillas = false;
+    for (let i = 0; i < texto.length; i++) {
+      const c = texto[i];
+      if (enComillas) {
+        if (c === '"') {
+          if (texto[i + 1] === '"') {
+            campo += '"';
+            i++;
+          } else {
+            enComillas = false;
+          }
+        } else {
+          campo += c;
+        }
+      } else if (c === '"') {
+        enComillas = true;
+      } else if (c === ',') {
+        fila.push(campo);
+        campo = '';
+      } else if (c === '\n' || c === '\r') {
+        if (c === '\r' && texto[i + 1] === '\n') i++;
+        fila.push(campo);
+        filas.push(fila);
+        fila = [];
+        campo = '';
+      } else {
+        campo += c;
+      }
+    }
+    if (campo !== '' || fila.length > 0) {
+      fila.push(campo);
+      filas.push(fila);
+    }
+    return filas;
+  };
+
+  const importarCSV = async (file) => {
+    setImportando(true);
+    setImportMessage(null);
+    try {
+      const texto = await file.text();
+      const filas = parseCSV(texto).filter((f) => f.some((c) => String(c).trim() !== ''));
+
+      if (filas.length < 2) {
+        setImportMessage({
+          type: 'error',
+          texto: 'El archivo CSV no contiene datos o el encabezado es inválido.'
+        });
+        return;
+      }
+
+      const encabezados = filas[0].map((h) => h.trim().toLowerCase());
+      const indice = (col) => {
+        const i = encabezados.indexOf(col);
+        return i === -1 ? null : i;
+      };
+      const idx = {
+        tipo: indice('tipo'),
+        nombre: indice('nombre'),
+        direccion: indice('direccion'),
+        latitud: indice('latitud'),
+        longitud: indice('longitud')
+      };
+
+      const camposFaltantes = Object.keys(idx).filter((k) => idx[k] === null);
+      if (camposFaltantes.length > 0) {
+        setImportMessage({
+          type: 'error',
+          texto: `Faltan columnas en el CSV: ${camposFaltantes.join(', ')}.`
+        });
+        return;
+      }
+
+      let creadas = 0;
+      const errores = [];
+      const datos = filas.slice(1);
+
+      for (let i = 0; i < datos.length; i++) {
+        const fila = datos[i];
+        const data = {
+          tipo: String(fila[idx.tipo] ?? '').trim(),
+          nombre: String(fila[idx.nombre] ?? '').trim(),
+          direccion: String(fila[idx.direccion] ?? '').trim(),
+          latitud: String(fila[idx.latitud] ?? '').trim(),
+          longitud: String(fila[idx.longitud] ?? '').trim()
+        };
+
+        if (!data.tipo || !data.nombre || !data.direccion || !data.latitud || !data.longitud) {
+          errores.push(`Fila ${i + 2}: faltan campos obligatorios`);
+          continue;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/sede`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          if (response.ok) {
+            creadas++;
+          } else {
+            errores.push(`Fila ${i + 2}: "${data.nombre}" (error del servidor)`);
+          }
+        } catch {
+          errores.push(`Fila ${i + 2}: "${data.nombre}" (error de conexión)`);
+        }
+      }
+
+      const resumen = `Importación completada: ${creadas} sedes creadas, ${errores.length} con errores.`;
+      setImportMessage({
+        type: errores.length > 0 ? 'error' : 'success',
+        texto: errores.length > 0
+          ? `${resumen} ${errores.slice(0, 5).join(' | ')}`
+          : resumen
+      });
+      fetchStores();
+    } catch {
+      setImportMessage({ type: 'error', texto: 'No se pudo leer el archivo CSV.' });
+    } finally {
+      setImportando(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) importarCSV(file);
+  };
+
   return (
     <div className="store-container">
       <div className="store-content">
         {!modalAbierto && message && <p className="message">{message}</p>}
+        {importMessage && (
+          <p className={`import-message ${importMessage.type === 'error' ? 'import-message--error' : ''}`}>
+            {importMessage.texto}
+          </p>
+        )}
 
         <div className="store-header">
           <input
@@ -172,9 +335,34 @@ function Store() {
               setPagina(1);
             }}
           />
-          <button type="button" className="btn-agregar" onClick={abrirModalNueva}>
-            + Agregar Sede
-          </button>
+          <div className="store-header-acciones">
+            <button
+              type="button"
+              className="btn-csv"
+              onClick={exportarCSV}
+              disabled={stores.length === 0}
+            >
+              Exportar CSV
+            </button>
+            <button
+              type="button"
+              className="btn-csv"
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              disabled={importando}
+            >
+              {importando ? 'Importando...' : 'Importar CSV'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              hidden
+              onChange={handleFileChange}
+            />
+            <button type="button" className="btn-agregar" onClick={abrirModalNueva}>
+              + Agregar Sede
+            </button>
+          </div>
         </div>
 
         <div className="stores-list">
