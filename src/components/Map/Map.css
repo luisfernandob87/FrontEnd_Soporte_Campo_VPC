@@ -61,6 +61,45 @@
   padding: 0.75rem;
 }
 
+.last-location-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.last-location-head .panel-title {
+  margin: 0;
+  border: none;
+  padding: 0;
+}
+
+.reload-button {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #0077ff;
+  border-radius: 4px;
+  background: #0077ff;
+  color: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reload-button:hover:not(:disabled) {
+  background: #0063cc;
+}
+
+.reload-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reload-hora {
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
 .location-details {
   display: grid;
   gap: 0.4rem;

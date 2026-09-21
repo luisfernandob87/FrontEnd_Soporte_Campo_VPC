@@ -1,7 +1,7 @@
 import './Map.css';
 import { MapContainer, TileLayer, ZoomControl, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import L from 'leaflet';
 import { API_BASE_URL } from '../../config';
@@ -139,6 +139,7 @@ function Map() {
   const [mostrarAgencias, setMostrarAgencias] = useState(true);
   const [mostrarS24, setMostrarS24] = useState(true);
   const [ultimaUbicacion, setUltimaUbicacion] = useState(null);
+  const [ultimaActualizacion, setUltimaActualizacion] = useState(null);
   const [rutasDisponibles, setRutasDisponibles] = useState([]);
   const [rutaSeleccionadaId, setRutaSeleccionadaId] = useState('');
   const [rutaPlanificada, setRutaPlanificada] = useState(null);
@@ -221,69 +222,65 @@ function Map() {
     }
   }, [searchParams, setSearchParams]);
 
-  // Obtener el historial de ubicación del usuario seleccionado
-  useEffect(() => {
-    let ignorar = false;
+  // Carga (o recarga sin recargar la página) el historial del técnico seleccionado
+  const cargarHistorial = useCallback(async () => {
     if (!usuarioSeleccionado) {
       setSegmentos([]);
       setUltimaUbicacion(null);
+      setMensajeRuta('');
       return;
     }
 
-    const fetchHistorial = async () => {
-      setCargandoRuta(true);
-      setMensajeRuta('');
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/usuario/${usuarioSeleccionado}/historial`
-        );
-        if (!response.ok) {
-          throw new Error('Error al obtener el historial');
-        }
-        const data = await response.json();
-
-        const puntos = (Array.isArray(data) ? data : [])
-          .filter(
-            (p) =>
-              p.latitud && p.longitud && (p.accuracy == null || p.accuracy <= ACCURACY_MAX)
-          )
-          .map((p) => ({
-            latitud: parseFloat(p.latitud),
-            longitud: parseFloat(p.longitud),
-            ts: new Date(p.timestamp).getTime(),
-          }))
-          .filter((p) => !isNaN(p.ts))
-          .sort((a, b) => a.ts - b.ts);
-
-        const ultimoPunto = puntos[puntos.length - 1] || null;
-        const inicioDia = diaSeleccionado;
-        const finDia = inicioDia + DIA_MS;
-        const puntosRuta = puntos.filter((p) => p.ts >= inicioDia && p.ts < finDia);
-
-        if (ignorar) return;
-        setUltimaUbicacion(ultimoPunto);
-        const segs = construirSegmentos(puntosRuta);
-        setSegmentos(segs);
-        if (puntosRuta.length === 0) {
-          setMensajeRuta('Sin registros de ubicación en el día seleccionado.');
-        }
-      } catch (error) {
-        console.error('Error al obtener el historial:', error);
-        if (!ignorar) {
-          setSegmentos([]);
-          setUltimaUbicacion(null);
-          setMensajeRuta('No se pudo cargar la ruta.');
-        }
-      } finally {
-        if (!ignorar) setCargandoRuta(false);
+    setCargandoRuta(true);
+    setMensajeRuta('');
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/usuario/${usuarioSeleccionado}/historial`
+      );
+      if (!response.ok) {
+        throw new Error('Error al obtener el historial');
       }
-    };
+      const data = await response.json();
 
-    fetchHistorial();
-    return () => {
-      ignorar = true;
-    };
+      const puntos = (Array.isArray(data) ? data : [])
+        .filter(
+          (p) =>
+            p.latitud && p.longitud && (p.accuracy == null || p.accuracy <= ACCURACY_MAX)
+        )
+        .map((p) => ({
+          latitud: parseFloat(p.latitud),
+          longitud: parseFloat(p.longitud),
+          ts: new Date(p.timestamp).getTime(),
+        }))
+        .filter((p) => !isNaN(p.ts))
+        .sort((a, b) => a.ts - b.ts);
+
+      const ultimoPunto = puntos[puntos.length - 1] || null;
+      const inicioDia = diaSeleccionado;
+      const finDia = inicioDia + DIA_MS;
+      const puntosRuta = puntos.filter((p) => p.ts >= inicioDia && p.ts < finDia);
+
+      setUltimaUbicacion(ultimoPunto);
+      const segs = construirSegmentos(puntosRuta);
+      setSegmentos(segs);
+      if (puntosRuta.length === 0) {
+        setMensajeRuta('Sin registros de ubicación en el día seleccionado.');
+      }
+      setUltimaActualizacion(new Date());
+    } catch (error) {
+      console.error('Error al obtener el historial:', error);
+      setSegmentos([]);
+      setUltimaUbicacion(null);
+      setMensajeRuta('No se pudo cargar la ruta.');
+    } finally {
+      setCargandoRuta(false);
+    }
   }, [usuarioSeleccionado, diaSeleccionado]);
+
+  // Cargar el historial cada vez que cambia el técnico o el día
+  useEffect(() => {
+    cargarHistorial();
+  }, [cargarHistorial]);
 
   const todosLosPuntos = segmentos.flat();
   const dias = construirDias();
@@ -429,7 +426,23 @@ function Map() {
             )}
 
             <div className="last-location">
-              <h4 className="panel-title">Última ubicación</h4>
+              <div className="last-location-head">
+                <h4 className="panel-title">Última ubicación</h4>
+                <button
+                  type="button"
+                  className="reload-button"
+                  onClick={cargarHistorial}
+                  disabled={cargandoRuta || !usuarioSeleccionado}
+                  title="Actualizar la ruta del técnico sin recargar la página"
+                >
+                  {cargandoRuta ? 'Cargando...' : '↻ Recargar'}
+                </button>
+              </div>
+              {ultimaActualizacion && (
+                <p className="route-message reload-hora">
+                  Actualizado: {formatearHora(ultimaActualizacion.getTime())}
+                </p>
+              )}
               {cargandoRuta && <p className="route-message">Cargando ruta...</p>}
               {!cargandoRuta &&
                 !ultimaUbicacionMostrar &&
