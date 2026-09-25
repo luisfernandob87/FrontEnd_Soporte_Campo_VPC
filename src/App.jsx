@@ -5,6 +5,7 @@ import { Login } from './components/Login/Login';
 import Menu from './components/Menu/Menu';
 import Sede from './components/Store/Store';
 import Map from './components/Map/Map';
+import Georreferenciacion from './components/Georreferenciacion/Georreferenciacion';
 import Reportes from './components/Reportes/Reportes';
 import Usuarios from './components/Usuarios/Usuarios';
 import Rutas from './components/Rutas/Rutas';
@@ -32,6 +33,8 @@ function App() {
         return 'Agregar Sede';
       case '/map':
         return 'Ver Mapa';
+      case '/georreferenciacion':
+        return 'Georreferenciación';
       case '/reportes':
         return 'Reportes';
       case '/usuarios':
@@ -73,6 +76,7 @@ function App() {
           <Route path="/" element={<Menu />} />
           <Route path="/sede" element={<Sede />} />
           <Route path="/map" element={<Map />} />
+          <Route path="/georreferenciacion" element={<Georreferenciacion />} />
           <Route path="/reportes" element={<Reportes />} />
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/rutas" element={<Rutas />} />

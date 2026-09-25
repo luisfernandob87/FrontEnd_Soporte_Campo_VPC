@@ -282,9 +282,11 @@ function Usuarios() {
                   <option value="">Sin rol (no puede entrar)</option>
                   <option value="Técnico">Técnico</option>
                   <option value="Coordinador">Coordinador</option>
+                  <option value="Mesa de Servicio">Mesa de Servicio</option>
                   {formData.rol &&
                     formData.rol !== 'Técnico' &&
-                    formData.rol !== 'Coordinador' && (
+                    formData.rol !== 'Coordinador' &&
+                    formData.rol !== 'Mesa de Servicio' && (
                       <option value={formData.rol}>{formData.rol}</option>
                     )}
                 </select>

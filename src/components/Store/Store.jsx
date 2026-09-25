@@ -7,6 +7,7 @@ const FORM_VACIO = {
   tipo: '',
   nombre: '',
   direccion: '',
+  correo: '',
   latitud: '',
   longitud: ''
 };
@@ -51,7 +52,7 @@ function Store() {
     const q = busqueda.trim().toLowerCase();
     if (!q) return stores;
     return stores.filter((s) =>
-      [s.tipo, s.nombre, s.direccion].some((v) =>
+      [s.tipo, s.nombre, s.direccion, s.correo].some((v) =>
         String(v || '').toLowerCase().includes(q)
       )
     );
@@ -86,6 +87,7 @@ function Store() {
       tipo: store.tipo,
       nombre: store.nombre,
       direccion: store.direccion,
+      correo: store.correo,
       latitud: store.latitud,
       longitud: store.longitud
     });
@@ -174,7 +176,7 @@ function Store() {
   };
 
   const exportarCSV = () => {
-    const encabezados = ['tipo', 'nombre', 'direccion', 'latitud', 'longitud'];
+    const encabezados = ['tipo', 'nombre', 'direccion', 'correo', 'latitud', 'longitud'];
     const filas = stores.map((sede) =>
       encabezados.map((h) => escaparCSV(sede[h])).join(',')
     );
@@ -254,11 +256,13 @@ function Store() {
         tipo: indice('tipo'),
         nombre: indice('nombre'),
         direccion: indice('direccion'),
+        correo: indice('correo'),
         latitud: indice('latitud'),
         longitud: indice('longitud')
       };
 
-      const camposFaltantes = Object.keys(idx).filter((k) => idx[k] === null);
+      const obligatorias = ['tipo', 'nombre', 'direccion', 'latitud', 'longitud'];
+      const camposFaltantes = obligatorias.filter((k) => idx[k] === null);
       if (camposFaltantes.length > 0) {
         setImportMessage({
           type: 'error',
@@ -288,6 +292,7 @@ function Store() {
           tipo: String(fila[idx.tipo] ?? '').trim(),
           nombre: String(fila[idx.nombre] ?? '').trim(),
           direccion: String(fila[idx.direccion] ?? '').trim(),
+          correo: idx.correo != null ? String(fila[idx.correo] ?? '').trim() : '',
           latitud: String(fila[idx.latitud] ?? '').trim(),
           longitud: String(fila[idx.longitud] ?? '').trim()
         };
@@ -404,6 +409,7 @@ function Store() {
                 <th>Tipo</th>
                 <th>Nombre</th>
                 <th>Dirección</th>
+                <th>Correo</th>
                 <th>Latitud</th>
                 <th>Longitud</th>
                 <th>Acciones</th>
@@ -412,7 +418,7 @@ function Store() {
             <tbody>
               {storesPaginados.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="store-vacio">
+                  <td colSpan="7" className="store-vacio">
                     No se encontraron sedes.
                   </td>
                 </tr>
@@ -422,6 +428,7 @@ function Store() {
                   <td>{store.tipo}</td>
                   <td>{store.nombre}</td>
                   <td>{store.direccion}</td>
+                  <td>{store.correo || '-'}</td>
                   <td>{store.latitud}</td>
                   <td>{store.longitud}</td>
                   <td className="acciones-cell">
@@ -516,6 +523,18 @@ function Store() {
                   value={formData.direccion}
                   onChange={handleChange}
                   required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="correo">Correo electrónico:</label>
+                <input
+                  type="email"
+                  id="correo"
+                  name="correo"
+                  value={formData.correo}
+                  onChange={handleChange}
+                  placeholder="sede@correo.com"
                 />
               </div>
 
