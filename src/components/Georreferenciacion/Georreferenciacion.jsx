@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import './Georreferenciacion.css';
 import { API_BASE_URL } from '../../config';
 
-const ETIQUETA_TIPO = { ticket: 'Ticket', workOrder: 'Orden', workorder: 'Orden' };
+const ETIQUETA_TIPO = { ticket: 'INC', workOrder: 'WO', workorder: 'WO' };
 const ETIQUETA_FUENTE = {
   automatica: 'Automática',
   manual: 'Manual',
@@ -43,7 +43,7 @@ function Georreferenciacion() {
         (Array.isArray(sedesRes) ? sedesRes : []).filter(
           (s) =>
             String(s.status).toLowerCase() === 'activo' &&
-            String(s.tipo).toLowerCase() !== 'Super 24'
+            String(s.tipo).toLowerCase() === 'agencia'
         )
       );
     } catch (e) {
