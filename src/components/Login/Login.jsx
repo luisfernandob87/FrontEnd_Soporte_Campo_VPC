@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import './Login.css';
-import logo from '../../assets/logo.jpg';
+import logo from '../../assets/logo.png';
 import LoadingButton from '../common/LoadingButton';
 
 export function Login() {
@@ -27,7 +27,7 @@ export function Login() {
   return (
     <div className="login-container">
       <div className="login-box">
-        <img src={logo} alt="Logo" className="login-logo" />
+        <img src={logo} alt="Castillo Hermanos" className="login-logo" />
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
             <input
