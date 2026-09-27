@@ -1,0 +1,7 @@
+# Render (sitios estaticos) usa este archivo para las reglas de reescritura.
+#
+# La app es una SPA con react-router: las rutas son /tickets, /map, /sedes, etc.
+# Al recargar (F5) el servidor pide ese archivo al servidor de estaticos, no
+# existe, y devuelve 404. Esta regla manda cualquier ruta a index.html para que
+# la app cargue y resuelva la ruta en el navegador.
+/*    /index.html   200

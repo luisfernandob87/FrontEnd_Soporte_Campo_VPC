@@ -10,6 +10,13 @@ lerna-debug.log*
 node_modules
 *.local
 
+# Variables de entorno: nunca se suben. Vite las incrusta al compilar, asi que
+# un .env con la URL de desarrollo dejaba la app en produccion apuntando a
+# localhost. La plantilla esta en .env.example.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
